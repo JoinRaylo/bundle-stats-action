@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
-const got = import('got');
+const fetch = require('node-fetch-native');
 const core = require('@actions/core');
 const { default: artifactClient} = require('@actions/artifact');
 const { createArtifacts } = require('@bundle-stats/cli-utils');
@@ -13,6 +13,7 @@ const { GITHUB_REPOSITORY, GITHUB_SHA } = process.env;
   const id = core.getInput('id', { required: false });
   const statsPath = core.getInput('webpack-stats-path', { required: true });
   const token = core.getInput('repo-token', { required: false });
+  const skipArtifactUpload = core.getInput('skip-artifact-upload', { required: false }) == 'true';
 
   const runId = ['bundle-stats', id].filter(Boolean).join(' / ');
   const runArtifact = ['bundle-stats', id].filter(Boolean).join('-');
@@ -28,6 +29,7 @@ const { GITHUB_REPOSITORY, GITHUB_SHA } = process.env;
     core.debug('Validate webpack stats');
     const invalid = validate(data);
     if (invalid) {
+      core.setFailed(`Failed: ${invalid}`);
       return core.warning(invalid);
     }
 
@@ -59,28 +61,32 @@ const { GITHUB_REPOSITORY, GITHUB_SHA } = process.env;
       );
     } catch (err) {
       core.error(err.message);
+      core.setFailed('Failed to write artifact files');
+      return;
     }
 
-
-    await artifactClient.uploadArtifact(runArtifact, files, outDir);
+    if (!skipArtifactUpload) {
+      await artifactClient.uploadArtifact(runArtifact, files, outDir);
+    }
 
     const info = report?.insights?.webpack?.assetsSizeTotal?.data?.info?.displayValue;
 
     if (!info) {
       core.warning(`Something went wrong, no information available.`);
+      core.setFailed('Failed to report bundle size');
       return;
     }
 
     if (token) {
-      await got.post(
+      await fetch(
         `https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}`,
         {
-          json: {
+          method: 'post',
+          body: JSON.stringify({
             state: 'success',
             context: runId,
             description: info
-          },
-          responseType: 'json',
+          }),
           headers: {
             authorization: `Bearer ${token}`,
             'content-type': 'application/json'
@@ -88,9 +94,14 @@ const { GITHUB_REPOSITORY, GITHUB_SHA } = process.env;
         }
       );
     } else {
-      core.warning(`Total Bundle Size: ${info}`);
+      core.warning(`Could set action status. Total Bundle Size: ${info}`);
     }
+
+    core.setOutput('files', files.map(file => `"${file}"`).join(' '));
+    core.setOutput('runId', runId);
+    core.setOutput('info', info);
   } catch (error) {
+    core.setFailed('Failed to report bundle size');
     return core.error(error.stack ? error.stack : error.message);
   }
 })();

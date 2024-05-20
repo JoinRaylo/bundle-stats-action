@@ -18,3 +18,7 @@ inputs:
     description: 'Github action auth token'
     required: false
     default: ''
+  skip-artifact-upload:
+    description: 'Skip uploading stats file and report to GitHub Artifacts'
+    required: false
+    default: 'false'

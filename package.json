@@ -36,7 +36,7 @@
     "@actions/core": "^1",
     "@bundle-stats/cli-utils": "^4.12.2",
     "@bundle-stats/utils": "^4.12.2",
-    "got": "^14.3.0"
+    "node-fetch-native": "^1.6.4"
   },
   "devDependencies": {
     "@vercel/ncc": "latest"
