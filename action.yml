@@ -1,11 +1,11 @@
-name: 'BundleStats'
+name: 'BundleStats (updated)'
 description: 'Generates bundle-stats reports for webpack stats.'
 branding:
   icon: 'box'
   color: 'blue'
 runs:
-  using: 'node16'
-  main: 'index.js'
+  using: 'node20'
+  main: 'dist/index.js'
 inputs:
   id: 
     description: 'Run id'
