@@ -5,7 +5,7 @@
   "source": "index.js",
   "main": "dist/index.js",
   "scripts": {
-    "build": "ncc build index.js -o dist",
+    "build": "ncc build index.js --no-cache --source-map --out dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -36,8 +36,7 @@
     "@actions/core": "^1",
     "@bundle-stats/cli-utils": "^4.12.2",
     "@bundle-stats/utils": "^4.12.2",
-    "got": "^14.3.0",
-    "lodash": "^4.17.21"
+    "got": "^14.3.0"
   },
   "devDependencies": {
     "@vercel/ncc": "latest"

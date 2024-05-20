@@ -1,9 +1,8 @@
 const fs = require('fs').promises;
 const path = require('path');
-const { get } = require('lodash');
-const got = require('got');
+const got = import('got');
 const core = require('@actions/core');
-const artifact = require('@actions/artifact');
+const { default: artifactClient} = require('@actions/artifact');
 const { createArtifacts } = require('@bundle-stats/cli-utils');
 const { createJobs, createReport } = require('@bundle-stats/utils');
 const { filter, validate } = require('@bundle-stats/utils/lib/webpack');
@@ -63,11 +62,9 @@ const { GITHUB_REPOSITORY, GITHUB_SHA } = process.env;
     }
 
 
-    await artifact.create().uploadArtifact(runArtifact, files, outDir, {
-      continueOnError: true
-    });
+    await artifactClient.uploadArtifact(runArtifact, files, outDir);
 
-    const info = get(report, 'insights.webpack.assetsSizeTotal.data.info.displayValue');
+    const info = report?.insights?.webpack?.assetsSizeTotal?.data?.info?.displayValue;
 
     if (!info) {
       core.warning(`Something went wrong, no information available.`);
@@ -94,6 +91,6 @@ const { GITHUB_REPOSITORY, GITHUB_SHA } = process.env;
       core.warning(`Total Bundle Size: ${info}`);
     }
   } catch (error) {
-    return core.error(error.message);
+    return core.error(error.stack ? error.stack : error.message);
   }
 })();

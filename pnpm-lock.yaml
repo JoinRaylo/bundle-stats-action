@@ -23,12 +23,9 @@ importers:
       got:
         specifier: ^14.3.0
         version: 14.3.0
-      lodash:
-        specifier: ^4.17.21
-        version: 4.17.21
     devDependencies:
       '@vercel/ncc':
-        specifier: ^0.38.1
+        specifier: latest
         version: 0.38.1
 
 packages:
