@@ -9,9 +9,32 @@ const { filter, validate } = require('@bundle-stats/utils/lib/webpack');
 
 const { GITHUB_REPOSITORY, GITHUB_SHA } = process.env;
 
+async function getWebpackData(statsPath) {
+  if (!statsPath) {
+    return undefined;
+  }
+
+  core.debug(`Read webpack stats file from ${statsPath}`);
+  const content = await fs.readFile(statsPath, 'utf8');
+  const source = JSON.parse(content);
+
+  core.debug('Filter webpack stats');
+  const data = filter(source);
+
+  core.debug('Validate webpack stats');
+  const invalid = validate(data);
+  if (invalid) {
+    core.setFailed(`Failed: ${invalid}`);
+    return core.warning(invalid);
+  }
+
+  return { webpack: data };
+}
+
 (async () => {
   const id = core.getInput('id', { required: false });
   const statsPath = core.getInput('webpack-stats-path', { required: true });
+  const statsBaselinePath = core.getInput('webpack-stats-baseline-path', { required: false });
   const token = core.getInput('repo-token', { required: false });
   const skipArtifactUpload = core.getInput('skip-artifact-upload', { required: false }) == 'true';
 
@@ -19,21 +42,13 @@ const { GITHUB_REPOSITORY, GITHUB_SHA } = process.env;
   const runArtifact = ['bundle-stats', id].filter(Boolean).join('-');
 
   try {
-    core.debug(`Read webpack stats file from ${statsPath}`);
-    const content = await fs.readFile(statsPath, 'utf8');
-    const source = JSON.parse(content);
-
-    core.debug('Filter webpack stats');
-    const data = filter(source);
-
-    core.debug('Validate webpack stats');
-    const invalid = validate(data);
-    if (invalid) {
-      core.setFailed(`Failed: ${invalid}`);
-      return core.warning(invalid);
+    const data = [await getWebpackData(statsPath)];
+    const baseline = await getWebpackData(statsBaselinePath);
+    if (baseline) {
+      data.push(baseline);
     }
 
-    const jobs = createJobs([{ webpack: data }]);
+    const jobs = createJobs(data);
 
     core.debug('Generate report');
     const report = createReport(jobs);
