@@ -84,9 +84,10 @@ async function getWebpackData(statsPath) {
       await artifactClient.uploadArtifact(runArtifact, files, outDir);
     }
 
-    const info = report?.insights?.webpack?.assetsSizeTotal?.data?.info?.displayValue;
+    const textInfo = report?.insights?.webpack?.assetsSizeTotal?.data?.text;
+    const markdownInfo = report?.insights?.webpack?.assetsSizeTotal?.data?.md;
 
-    if (!info) {
+    if (!textInfo) {
       core.warning(`Something went wrong, no information available.`);
       core.setFailed('Failed to report bundle size');
       return;
@@ -100,7 +101,7 @@ async function getWebpackData(statsPath) {
           body: JSON.stringify({
             state: 'success',
             context: runId,
-            description: info
+            description: textInfo
           }),
           headers: {
             authorization: `Bearer ${token}`,
@@ -109,12 +110,14 @@ async function getWebpackData(statsPath) {
         }
       );
     } else {
-      core.warning(`Could set action status. Total Bundle Size: ${info}`);
+      core.warning(`Could set action status. Total Bundle Size: ${textInfo}`);
     }
 
     core.setOutput('files', files.map(file => `"${file}"`).join(' '));
     core.setOutput('runId', runId);
-    core.setOutput('info', info);
+    core.setOutput('info', textInfo);
+    core.setOutput('markdownInfo', markdownInfo);
+    core.setOutput('jsonInfo', JSON.stringify(report?.insights?.webpack?.assetsSizeTotal?.data?.info));
   } catch (error) {
     core.setFailed('Failed to report bundle size');
     return core.error(error.stack ? error.stack : error.message);
