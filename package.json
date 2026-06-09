@@ -40,5 +40,10 @@
   },
   "devDependencies": {
     "@vercel/ncc": "latest"
+  },
+  "pnpm": {
+    "overrides": {
+      "undici@<=7.24.1": "7.24.1"
+    }
   }
 }
