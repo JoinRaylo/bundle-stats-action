@@ -40,5 +40,10 @@
   },
   "devDependencies": {
     "@vercel/ncc": "latest"
+  },
+  "pnpm": {
+    "overrides": {
+      "glob@<=10.5.0": "10.5.0"
+    }
   }
 }
