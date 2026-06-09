@@ -15,6 +15,10 @@ async function getWebpackData(statsPath) {
   }
 
   core.debug(`Read webpack stats file from ${statsPath}`);
+  if (statsPath.includes('..') || path.isAbsolute(statsPath)) {
+    core.setFailed('Invalid file path');
+    return core.warning('Invalid file path');
+  }
   const content = await fs.readFile(statsPath, 'utf8');
   const source = JSON.parse(content);
 
